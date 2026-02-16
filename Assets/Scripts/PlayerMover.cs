@@ -4,20 +4,20 @@ using UnityEngine;
 public class PlayerMover : MonoBehaviour
 {
     public GridManager2D grid;
-    public float moveTime = 0.12f; // 一步多久
+    public float moveTime = 0.12f; // 一步多�?
     public int x;
     public int y;
 
     [Header("Hold-to-move")]
     public bool holdToMove = true;
-    public float repeatDelay = 0.22f;    // 按住后，第一次重复前的延迟
+    public float repeatDelay = 0.22f;    // 按住后，第一次重复前的延�?
     public float repeatInterval = 0.10f; // 重复频率（越小越快）
 
     private Vector2Int heldDir = Vector2Int.zero;
     private float holdTimer = 0f;
     private bool didFirstHoldStep = false;
 
-    public float footYOffset = 0.5f; // 角色脚底离逻辑平面的高度
+    public float footYOffset = 0.5f; // 角色脚底离逻辑平面的高�?
 
     public bool autoFootFromCollider = true;
 
@@ -32,13 +32,13 @@ public class PlayerMover : MonoBehaviour
     {
         if (grid == null) grid = FindObjectOfType<GridManager2D>();
 
-        // 自动用 Collider 的 bounds 来算脚底偏移（推荐）
+        // 自动�?Collider �?bounds 来算脚底偏移（推荐）
         if (autoFootFromCollider)
         {
             var col = GetComponentInChildren<Collider>();
             if (col != null)
             {
-                // 让 collider 的底部刚好贴在 grid.tileTopY 上
+                // �?collider 的底部刚好贴�?grid.tileTopY �?
                 float bottomToPivot = transform.position.y - col.bounds.min.y;
                 footYOffset = bottomToPivot;
             }
@@ -75,18 +75,18 @@ public class PlayerMover : MonoBehaviour
         if (!holdToMove)
             return;
 
-        // 再读取“按住方向”
+        // 再读取“按住方向�?
         Vector2Int holdDirNow = ReadHoldDir();
         if (holdDirNow == Vector2Int.zero)
         {
-            // 松开：清空状态
+            // 松开：清空状�?
             heldDir = Vector2Int.zero;
             holdTimer = 0f;
             didFirstHoldStep = false;
             return;
         }
 
-        // 方向改变：立刻按新方向走一步
+        // 方向改变：立刻按新方向走一�?
         if (holdDirNow != heldDir)
         {
             heldDir = holdDirNow;
@@ -137,10 +137,11 @@ public class PlayerMover : MonoBehaviour
     {
         if (d == Vector2Int.zero) return;
 
-        // ✅ 关键：玩家“尝试”移动就立刻转向（即使撞墙/推不动）
-        FaceGridDir(d);
-
+        // Ignore input while a step is resolving to avoid facing drift.
         if (StepManager.I.stepping) return;
+
+        // Keep existing behavior: valid attempt updates facing immediately.
+        FaceGridDir(d);
 
         int nx = x + d.x;
         int ny = y + d.y;
@@ -151,7 +152,7 @@ public class PlayerMover : MonoBehaviour
         var occ = OccupancyMap.I;
         if (occ != null)
         {
-            // 重建占格（保持你原逻辑）
+            // 重建占格（保持你原逻辑�?
             occ.Clear();
             occ.Set(x, y, this);
 
@@ -173,7 +174,7 @@ public class PlayerMover : MonoBehaviour
             if (blocker is AutoMover) return;
             if (blocker is ReplicatorNode) return;
 
-            // 推箱子
+            // 推箱�?
             if (blocker is BoxMover box)
             {
                 int bx2 = box.x + d.x;
@@ -186,7 +187,7 @@ public class PlayerMover : MonoBehaviour
                 return;
             }
 
-            // 如果你希望“有其它占格就不能走”，就保留这句
+            // 如果你希望“有其它占格就不能走”，就保留这�?
             // if (blocker != null) return;
         }
 
@@ -248,7 +249,7 @@ public class PlayerMover : MonoBehaviour
 
     private static Vector2Int ReadHoldDir()
     {
-        // 同时按多个方向时，简单按“优先级”取一个
+        // 同时按多个方向时，简单按“优先级”取一�?
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) return Vector2Int.up;
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) return Vector2Int.down;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) return Vector2Int.left;
@@ -256,5 +257,7 @@ public class PlayerMover : MonoBehaviour
         return Vector2Int.zero;
     }
 }
+
+
 
 
