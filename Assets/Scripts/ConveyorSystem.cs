@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ConveyorSystem : MonoBehaviour
@@ -6,7 +6,7 @@ public class ConveyorSystem : MonoBehaviour
     public GridManager2D grid;
 
     [Header("Safety")]
-    public int maxTeleportsPerStepPerObject = 8; // 防止无限循环（传送到另一个传送带上）
+    public int maxTeleportsPerStepPerObject = 8; // Safety cap to prevent infinite teleport loops (e.g. belt-to-belt chaining).
 
     private void Start()
     {
@@ -28,7 +28,7 @@ public class ConveyorSystem : MonoBehaviour
 
         public StaticBlocker(int x, int y) { X = x; Y = y; }
 
-        public void TeleportTo(int x, int y) { } // 不会被传送
+        public void TeleportTo(int x, int y) { } // This blocker type cannot be teleported.
         public void TrySetFacingDir(Vector2Int d) { }
     }
 
@@ -37,16 +37,16 @@ public class ConveyorSystem : MonoBehaviour
         var belts = FindObjectsOfType<ConveyorBelt>();
         if (belts == null || belts.Length == 0) return;
 
-        // 收集可传送对象
+        // Collect objects that can be conveyed.
         var player = FindObjectOfType<PlayerMover>();
         var autos = FindObjectsOfType<AutoMover>();
 
-        // 你的工程里箱子脚本可能叫 BoxMover（你之前做过），也可能是别的名字。
-        // 这里用 GetComponentsInScene 的方式，避免你改名后要改系统。
-        var boxes = FindObjectsOfType<BoxMover>();       // 如果你叫 BoxMover
+        // Box script may be named BoxMover or something else depending on project history.
+        // Use scene scanning to avoid coupling to specific rename history.
+        var boxes = FindObjectsOfType<BoxMover>();       // If your box script is BoxMover, this line is correct.
 
-        // 全部放到一个列表里按顺序处理：玩家→箱子→auto→传送带→L
-        // 这样比较符合“玩家优先”的直觉
+        // Process in order: player -> box -> auto -> belt -> static blocker.
+        // This ordering better matches player-first expectations.
         var teleList = new List<IConveyable>();
 
         if (player != null && player.gameObject.activeSelf)
@@ -60,20 +60,20 @@ public class ConveyorSystem : MonoBehaviour
             if (a != null && a.gameObject.activeSelf)
                 teleList.Add(new ConveyableAuto(a));
 
-        //foreach (var belt in belts)
+        // Apply rules to each conveyor belt.
         //    if (belt != null && belt.gameObject.activeSelf)
         //        teleList.Add(new ConveyableBelt(belt));
 
-        // 迭代处理：可能会“传送到另一条传送带上”，所以允许多次，但有限制
-        // 同时用占格避免把人传到别人身上
+        // Iterative pass: objects can land on another belt in the same step.
+        // Occupancy map prevents teleporting onto an occupied cell.
         for (int iter = 0; iter < maxTeleportsPerStepPerObject; iter++)
         {
             bool anyMoved = false;
 
-            // 本轮占格
+            // Occupancy for this iteration.
             var occ = BuildOccupancy(teleList);
 
-            // 对每条传送带按规则处理
+            // Process each conveyor belt by rules.
             foreach (var belt in belts)
             {
                 if (belt == null || !belt.gameObject.activeSelf) continue;
@@ -82,52 +82,52 @@ public class ConveyorSystem : MonoBehaviour
                 var mid = belt.MidCell;
                 var end = belt.EndCell;
 
-                // End 必须可走（否则整条带子本轮不工作）
+                // End cell must be walkable, otherwise this belt does not work this iteration.
                 if (!grid.IsWalkable(end.x, end.y)) continue;
 
-                // ===== 1) 第二格优先：Mid -> End（若 End 被占则 Mid 不动）=====
+                // 1) Mid -> End first; if End is blocked, Mid stays.
                 occ.TryGetValue(mid, out var midObj);
 
                 if (midObj != null)
                 {
-                    // End 空才能传
+                    // Move only if End is empty.
                     if (!occ.ContainsKey(end))
                     {
-                        // 从 mid 移除
+                        // Remove from Mid.
                         occ.Remove(mid);
 
-                        // 传送到 end（不消耗step；动画由 TeleportTo 自己决定）
+                        // Teleport to End (no extra step cost; animation behavior is defined by TeleportTo).
                         midObj.TeleportTo(end.x, end.y);
 
-                        // 只有 auto 改朝向（你在 TrySetFacingDir 内已经处理）
+                        // Only Auto changes facing here (handled in TrySetFacingDir).
                         midObj.TrySetFacingDir(belt.dir);
 
-                        // 占用 end
+                        // Occupy End.
                         occ[end] = midObj;
                         anyMoved = true;
 
-                        // 更新 midObj 变量：mid 现在空了（供下面 start->mid 使用）
+                        // Update local midObj state: Mid is now empty for Start -> Mid logic.
                         midObj = null;
                     }
                     else
                     {
-                        // End 被挡：Mid 不动（你的规则）
+                        // End is blocked: Mid stays in place (per design).
                     }
                 }
 
-                // ===== 2) 第一格：如果 Mid 空，则 Start -> Mid；否则 Start 不动 =====
-                if (!occ.ContainsKey(mid)) // Mid 空（注意：可能因为上面 Mid->End 成功而空）
+                // 2) Start -> Mid only when Mid is empty.
+                if (!occ.ContainsKey(mid)) // Mid is empty (possibly emptied by Mid -> End above).
                 {
                     occ.TryGetValue(start, out var startObj);
                     if (startObj != null)
                     {
-                        // Start->Mid 不需要检查 mid 可走（mid 本来就是 belt 的格子，你应视为可站立）
+                        // No extra walkable check needed for Mid; it is a belt tile.
                         occ.Remove(start);
 
-                        // 这里是“前进到第二格”，不是去 End
+                        // This moves to Mid (second cell), not directly to End.
                         startObj.TeleportTo(mid.x, mid.y);
 
-                        // auto 同样面向 belt.dir（建议保持一致）
+                        // Auto also faces belt.dir for consistency.
                         startObj.TrySetFacingDir(belt.dir);
 
                         occ[mid] = startObj;
@@ -148,7 +148,7 @@ public class ConveyorSystem : MonoBehaviour
         {
             if (!o.IsAlive) continue;
             var key = new Vector2Int(o.X, o.Y);
-            // 如果同格出现，后者覆盖（本来就不该发生）
+            // If duplicate occupancy appears, later write wins (should not normally happen).
             occ[key] = o;
         }
 
@@ -214,11 +214,11 @@ public class ConveyorSystem : MonoBehaviour
 
         public void TrySetFacingDir(Vector2Int d)
         {
-            a.dir = d; // ✅ 只有auto改方向
+            a.dir = d; // Only Auto changes direction.
         }
     }
 
-    // 你的箱子脚本如果叫 BoxMover：按这个写
+    // If your box script is BoxMover, keep this implementation.
     private class ConveyableBox : IConveyable
     {
         private readonly BoxMover b;
@@ -241,7 +241,7 @@ public class ConveyorSystem : MonoBehaviour
         public void TrySetFacingDir(Vector2Int d) { }
     }
 
-    // 传送带“自己也可被传送”：把它当成一个可移动对象（如果你允许它移动）
+    // Conveyor itself can be conveyable if your design allows belt movement.
     private class ConveyableBelt : IConveyable
     {
         private readonly ConveyorBelt belt;

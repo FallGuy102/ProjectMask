@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 public class LevelPainterWindow : EditorWindow
@@ -65,8 +65,7 @@ public class LevelPainterWindow : EditorWindow
 
         GUILayout.Space(8);
         EditorGUILayout.HelpBox(
-            "Scene里：按住 Ctrl + 左键刷格子，Ctrl + 右键删除。\n" +
-            "如果点不到：确认有地面 Collider（看下面第2部分）。",
+            "In the Scene: Hold down Ctrl + Left Click to paint grids, Ctrl + Right Click to delete.",
             MessageType.Info);
 
         GUILayout.BeginHorizontal();
@@ -95,7 +94,7 @@ public class LevelPainterWindow : EditorWindow
         if (!e.control) return;
 
         Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
-        if (!RayToGroundPlane(ray, 0f, out Vector3 p)) return; // y=0 平面
+        if (!RayToGroundPlane(ray, 0f, out Vector3 p)) return; // y=0 plane.
 
         int gx = Mathf.RoundToInt(p.x / cellSize);
         int gy = Mathf.RoundToInt(p.z / cellSize);
@@ -118,16 +117,16 @@ public class LevelPainterWindow : EditorWindow
 
     private static bool RayToGroundPlane(Ray ray, float planeY, out Vector3 hitPoint)
     {
-        // 平面方程：y = planeY
+        // Plane equation: y = planeY.
         // Ray: origin + t * dir
-        // 解：origin.y + t * dir.y = planeY
+        // Solve: origin.y + t * dir.y = planeY.
         hitPoint = default;
 
         float dy = ray.direction.y;
-        if (Mathf.Abs(dy) < 1e-6f) return false; // 平行于地面
+        if (Mathf.Abs(dy) < 1e-6f) return false; // Ray is parallel to ground plane.
 
         float t = (planeY - ray.origin.y) / dy;
-        if (t < 0f) return false; // 交点在射线背后
+        if (t < 0f) return false; // Intersection is behind the ray origin.
 
         hitPoint = ray.origin + ray.direction * t;
         return true;

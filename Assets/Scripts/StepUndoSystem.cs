@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -62,7 +62,7 @@ public class StepUndoSystem : MonoBehaviour
 
     private void OnEnable()
     {
-        // ? ��������/�л�ʱ��ȷ����ʷ����糡������
+        // On scene reload/switch, ensure history does not leak across scenes.
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -75,7 +75,7 @@ public class StepUndoSystem : MonoBehaviour
     {
         if (grid == null) grid = FindObjectOfType<GridManager2D>();
 
-        // ? ��ʼ���գ��ȳ�ʼ�������ץ����֡���ȣ�
+        // Initial snapshot: wait for startup initialization before capture.
         StartCoroutine(CaptureInitialAfterInit());
 
         if (StepManager.I != null)
@@ -90,20 +90,20 @@ public class StepUndoSystem : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // ? �³��������꣺����ʷ + ����ץ��ʼ
+        // After new scene load: clear history and recapture initial state.
         ResetHistoryAndCaptureInitial();
     }
 
     private IEnumerator CaptureInitialAfterInit()
     {
         yield return null;
-        yield return null; // ? ���һ֡������ PlayerMover/Awake/Start ��ûͬ����
+        yield return null; // Wait one more frame to avoid capturing before PlayerMover init is synced.
         ResetHistoryAndCaptureInitial();
     }
 
     /// <summary>
-    /// ? ����/���ڶ����ã������ʷ��ֻ������ǰ�ؿ��ġ���ʼ���ա�
-    /// ��� R ���غ� Undo �ص��ɿ���/�� player.x/y Ĭ��ֵ�����⡣
+    /// Public helper: clear history and keep only the current level initial snapshot.
+    /// Prevents undo falling back to stale snapshots or default player coordinates after reload.
     /// </summary>
     public void ResetHistoryAndCaptureInitial()
     {
@@ -173,8 +173,8 @@ public class StepUndoSystem : MonoBehaviour
             s.player.footYOffset = p.footYOffset;
             s.player.facingDir = ReadPlayerFacingDir(p);
 
-            // ? �ؼ��޸�����Ҫä�� p.x/p.y�����ܻ��ǽű�Ĭ��ֵ��
-            // ֱ�Ӵ� transform λ�÷��� grid ���꣬ȷ����ʼ������ȷ
+            // Critical fix: do not trust p.x/p.y, they may still be default values.
+            // Derive grid coordinates from transform position to ensure initial snapshot correctness.
             Vector2Int gpos = WorldToGridSafe(p.transform.position, grid);
             s.player.x = gpos.x;
             s.player.y = gpos.y;
@@ -247,8 +247,8 @@ public class StepUndoSystem : MonoBehaviour
     {
         if (grid == null) return Vector2Int.zero;
 
-        // �����Ŀ�� XZ ƽ�棺x �� world.x��y �� world.z
-        // ������ grid.cellSize �����㣨���� AutoMover Start ��һ�£�
+        // Project uses XZ plane: x -> world.x, y -> world.z.
+        // Use grid.cellSize for conversion, consistent with AutoMover.Start.
         int gx = Mathf.RoundToInt(worldPos.x / grid.cellSize);
         int gy = Mathf.RoundToInt(worldPos.z / grid.cellSize);
         return new Vector2Int(gx, gy);
@@ -281,9 +281,10 @@ public class StepUndoSystem : MonoBehaviour
 
         var player = FindObjectOfType<PlayerMover>(includeInactive: true);
         if (player != null) player.StopAllCoroutines();
+        if (player != null) player.ClearInputBuffer();
 
         if (player != null)
-            player.gameObject.SetActive(true); // Undo һ�ɸ���
+            player.gameObject.SetActive(true); // Undo always revives player object.
 
         // clear masks
         foreach (var a in FindObjectsOfType<AutoMover>()) if (a) { a.gameObject.SetActive(false); Destroy(a.gameObject); }
@@ -465,4 +466,5 @@ public class StepUndoSystem : MonoBehaviour
             f.SetValue(StepManager.I, value);
     }
 }
+
 

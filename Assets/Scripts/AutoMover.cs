@@ -246,7 +246,7 @@ public class AutoMover : MonoBehaviour
             return;
         }
 
-        // ✅ HorizontalMove: "up-facing" 3x2
+        // HorizontalMove: up-facing 3x2 area.
         // rows: y and y+1 (2 rows)
         // cols: x-1, x, x+1 (3 cols)
         for (int dy = 0; dy <= 1; dy++)          // y, y+1

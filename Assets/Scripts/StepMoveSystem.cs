@@ -219,7 +219,7 @@ public class StepMoveSystem : MonoBehaviour
             }
             else
             {
-                // ✅ HorizontalMove: up-facing 3x2 (y and y+1, x-1..x+1)
+                // HorizontalMove: up-facing 3x2 (y and y+1, x-1..x+1).
                 for (int dy = 0; dy <= 1; dy++)
                     for (int dx = -1; dx <= 1; dx++)
                         _prevDynamic.Add(new Vector2Int(a.x + dx, a.y + dy));
@@ -281,7 +281,7 @@ public class StepMoveSystem : MonoBehaviour
             return false;
         }
 
-        // ✅ HorizontalMove: up-facing 3x2 (x-1..x+1, y..y+1)
+        // HorizontalMove: up-facing 3x2 (x-1..x+1, y..y+1).
         bool inX = (cellX >= a.x - 1 && cellX <= a.x + 1);
         bool inY = (cellY >= a.y && cellY <= a.y + 1);
         return inX && inY;

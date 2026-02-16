@@ -1,4 +1,4 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 
 [RequireComponent(typeof(AutoMover))]
 public class AutoMaskReceiver : MonoBehaviour
@@ -13,7 +13,7 @@ public class AutoMaskReceiver : MonoBehaviour
     public void Equip(MaskTypeSimple type)
     {
         if (GameStartController.I != null && GameStartController.I.started)
-            return; // 开始后禁止改
+            return; // Do not allow editing after game start.
 
         if (_auto == null) return;
 
@@ -22,7 +22,7 @@ public class AutoMaskReceiver : MonoBehaviour
             case MaskTypeSimple.Vertical:
                 _auto.state = AutoState.VerticalMove;
 
-                // 如果当前 dir 不是上下，给一个默认朝向（保留你的逻辑也可以）
+                // If current dir is not vertical, assign a default vertical direction.
                 if (_auto.dir != Vector2Int.up && _auto.dir != Vector2Int.down)
                     _auto.SetDirImmediate(Vector2Int.up);
                 break;
@@ -30,13 +30,13 @@ public class AutoMaskReceiver : MonoBehaviour
             case MaskTypeSimple.Horizontal:
                 _auto.state = AutoState.HorizontalMove;
 
-                // 如果当前 dir 不是左右，给一个默认朝向
+                // If current dir is not horizontal, assign a default horizontal direction.
                 if (_auto.dir != Vector2Int.left && _auto.dir != Vector2Int.right)
                     _auto.SetDirImmediate(Vector2Int.right);
                 break;
         }
 
-        // 让模型朝向立刻更新（如果你 AutoMover 里 ApplyFacing 是 private，就靠 SetDirImmediate）
-        // _auto.ApplyFacing(); // 不需要
+        // SetDirImmediate already refreshes facing; no direct ApplyFacing call is needed.
+        // SetDirImmediate already updates facing; no need to call ApplyFacing directly.
     }
 }

@@ -1,8 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TeleportAnimator : MonoBehaviour
 {
-    [Tooltip("传送动画时长（秒），建议 0.06~0.12")]
+    [Tooltip("0.06~0.12")]
     public float duration = 0.08f;
 
     private Coroutine co;
@@ -10,11 +10,11 @@ public class TeleportAnimator : MonoBehaviour
     private bool hasForcedFinal = false;
 
     /// <summary>
-    /// 开始一次快速传送动画。若已有动画在播，会先把上一段直接结算到终点。
+    /// Start a short teleport animation. If another one is running, finish the previous segment first.
     /// </summary>
     public void PlayTo(Vector3 targetPos, float customDuration = -1f)
     {
-        // 如果正在播上一段：直接落到上一段终点
+        // If a previous segment is still running, snap to its end first.
         ForceFinish();
 
         float d = customDuration > 0 ? customDuration : duration;
@@ -26,7 +26,7 @@ public class TeleportAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// 强制结束：立刻到终点（用于 step 很快、或下一次传送到来）
+    /// Force finish: jump to the destination immediately (used for very fast steps or a new teleport).
     /// </summary>
     public void ForceFinish()
     {

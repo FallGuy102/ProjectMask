@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class ReplicatorSystem : MonoBehaviour
@@ -25,7 +25,7 @@ public class ReplicatorSystem : MonoBehaviour
         var nodes = FindObjectsOfType<ReplicatorNode>();
         if (nodes == null || nodes.Length == 0) return;
 
-        // 快照：本步只关心 Box / Auto
+        // Snapshot: this step only tracks Box and Auto.
         var boxMap = new Dictionary<Vector2Int, BoxMover>();
         foreach (var b in FindObjectsOfType<BoxMover>())
             if (b != null && b.gameObject.activeSelf)
@@ -68,12 +68,12 @@ public class ReplicatorSystem : MonoBehaviour
                 return;
             }
 
-            // ===== 统一走 MaskMorph（切换 mask 的入口函数）=====
+            // Use MaskMorph as the unified mask conversion entry.
             if (entryIsAuto)
             {
                 Vector2Int newDir = Rotate90(entryAuto.dir, rotSign);
 
-                // 出口无论原来是 box 还是 auto，都 Morph 成 Auto，并设置方向
+                // Exit morphs to Auto regardless of original type, then direction is applied.
                 MaskMorph.MorphAt(
                     grid,
                     exit.x, exit.y,
@@ -85,9 +85,9 @@ public class ReplicatorSystem : MonoBehaviour
                     replicatorPrefab: null
                 );
             }
-            else // entryIsBox
+            else // At the exit, morph to Box (no direction state).
             {
-                // 出口 Morph 成 Box（无方向）
+                // Exit morphs to Box (no direction state).
                 MaskMorph.MorphAt(
                     grid,
                     exit.x, exit.y,

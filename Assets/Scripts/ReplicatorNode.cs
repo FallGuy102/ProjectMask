@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ReplicatorNode : MonoBehaviour
 {
@@ -9,8 +9,8 @@ public class ReplicatorNode : MonoBehaviour
     public int y;
 
     [Header("Ports (must be perpendicular)")]
-    public Vector2Int entryDir = Vector2Int.down;  // 入口相对复制器的方向（例：下）
-    public Vector2Int exitDir = Vector2Int.right; // 出口相对复制器的方向（例：右）
+    public Vector2Int entryDir = Vector2Int.down;  // Entry direction relative to replicator (example: down).
+    public Vector2Int exitDir = Vector2Int.right; // Exit direction relative to replicator (example: right).
 
     private void Start()
     {
@@ -31,20 +31,20 @@ public class ReplicatorNode : MonoBehaviour
     public Vector2Int ExitCell => new Vector2Int(x + exitDir.x, y + exitDir.y);
 
     /// <summary>
-    /// 计算把“入口方向”旋到“出口方向”的 90°旋转（只支持垂直）。
-    /// 返回：+1 = CCW(逆时针90)，-1 = CW(顺时针90)，0 = 不支持/不垂直
+    /// Compute the 90-degree rotation from entry direction to exit direction (perpendicular only).
+    /// Returns: +1 = CCW(90), -1 = CW(90), 0 = unsupported/not perpendicular.
     /// </summary>
     public int Rot90Sign()
     {
-        // 必须垂直（点积为 0）
+        // Must be perpendicular (dot product is 0).
         if (entryDir.x * exitDir.x + entryDir.y * exitDir.y != 0)
             return 0;
 
-        // 2D 叉积（z 分量）
+        // 2D cross product (z component).
         int cross = entryDir.x * exitDir.y - entryDir.y * exitDir.x;
 
-        if (cross > 0) return +1; // 逆时针 CCW
-        if (cross < 0) return -1; // 顺时针 CW
+        if (cross > 0) return +1; // Counter-clockwise (CCW).
+        if (cross < 0) return -1; // Clockwise (CW).
         return 0;
     }
 
@@ -55,14 +55,14 @@ public class ReplicatorNode : MonoBehaviour
         transform.position = new Vector3(w.x, transform.position.y, w.z);
     }
 
-    // 复制器的“方向”定义为 exitDir
+    // Replicator forward direction is defined by exitDir.
     public Vector2Int GetDir() => exitDir;
 
     public void SetDir(Vector2Int exit)
     {
         if (exit == Vector2Int.zero) return;
 
-        // 用 exitDir 表示方向，entryDir 固定为 exitDir 顺时针 90°
+        // Use exitDir as facing; entryDir is fixed to CW 90 deg of exitDir.
         exitDir = exit;
         entryDir = new Vector2Int(exit.y, -exit.x); // CW 90: (x,y)->(y,-x)
     }
@@ -71,7 +71,7 @@ public class ReplicatorNode : MonoBehaviour
     {
         if (entry == Vector2Int.zero || exit == Vector2Int.zero) return;
 
-        // 必须垂直
+        // Must be perpendicular.
         if (entry.x * exit.x + entry.y * exit.y != 0)
         {
             Debug.LogWarning($"Replicator ports must be perpendicular: entry={entry}, exit={exit}");

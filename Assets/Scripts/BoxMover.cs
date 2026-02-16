@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class BoxMover : MonoBehaviour
@@ -9,7 +9,7 @@ public class BoxMover : MonoBehaviour
     public int y;
 
     public float moveTime = 0.12f;
-    public float yOffset = 1f; // 箱子底部高度（按你的tile高度调）
+    public float yOffset = 1f; // Box bottom height offset. Tune to match your tile height.
 
     private void Start()
     {
@@ -30,7 +30,7 @@ public class BoxMover : MonoBehaviour
 
     public IEnumerator MoveTo(int nx, int ny)
     {
-        // ✅ 先更新逻辑坐标（占格立刻变更）
+        // Update logical coordinates first so occupancy changes immediately.
         x = nx;
         y = ny;
 

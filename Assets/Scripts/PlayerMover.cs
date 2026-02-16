@@ -4,41 +4,40 @@ using UnityEngine;
 public class PlayerMover : MonoBehaviour
 {
     public GridManager2D grid;
-    public float moveTime = 0.12f; // 一步多�?
+    public float moveTime = 0.10f;
+
+    [Header("Animation Timing")]
+    public float animationStepDuration = 0.18f;
+
     public int x;
     public int y;
 
     [Header("Hold-to-move")]
     public bool holdToMove = true;
-    public float repeatDelay = 0.22f;    // 按住后，第一次重复前的延�?
-    public float repeatInterval = 0.10f; // 重复频率（越小越快）
+    public float repeatDelay = 0.16f;
+    public float repeatInterval = 0.08f;
 
     private Vector2Int heldDir = Vector2Int.zero;
     private float holdTimer = 0f;
     private bool didFirstHoldStep = false;
 
-    public float footYOffset = 0.5f; // 角色脚底离逻辑平面的高�?
-
+    public float footYOffset = 0.5f;
     public bool autoFootFromCollider = true;
 
     [Header("Model Facing")]
     public float modelYawOffset = 0f;
-
     public Vector2Int facingDir = Vector2Int.up;
-
-    private bool moving;
+    private Vector2Int bufferedDir = Vector2Int.zero;
 
     private void Start()
     {
         if (grid == null) grid = FindObjectOfType<GridManager2D>();
 
-        // 自动�?Collider �?bounds 来算脚底偏移（推荐）
         if (autoFootFromCollider)
         {
             var col = GetComponentInChildren<Collider>();
             if (col != null)
             {
-                // �?collider 的底部刚好贴�?grid.tileTopY �?
                 float bottomToPivot = transform.position.y - col.bounds.min.y;
                 footYOffset = bottomToPivot;
             }
@@ -51,8 +50,20 @@ public class PlayerMover : MonoBehaviour
         var world = grid.GridToWorld(x, y);
         transform.position = new Vector3(world.x, grid.tileTopY + footYOffset, world.z);
 
-        // Initialize facing from current rotation so Undo can restore correctly.
         facingDir = WorldDirToGridDir(transform.forward);
+    }
+
+    private void OnDisable()
+    {
+        ClearInputBuffer();
+    }
+
+    public void ClearInputBuffer()
+    {
+        bufferedDir = Vector2Int.zero;
+        heldDir = Vector2Int.zero;
+        holdTimer = 0f;
+        didFirstHoldStep = false;
     }
 
     private void Update()
@@ -60,7 +71,15 @@ public class PlayerMover : MonoBehaviour
         if (grid == null) return;
         if (StepManager.I == null) return;
 
-        // 先读取“瞬时按下”（首步立即走）
+        // Consume latest buffered input once the step pipeline is idle.
+        if (!StepManager.I.stepping && bufferedDir != Vector2Int.zero)
+        {
+            var d = bufferedDir;
+            bufferedDir = Vector2Int.zero;
+            TryStep(d);
+            if (StepManager.I.stepping) return;
+        }
+
         Vector2Int downDir = ReadDownDir();
         if (downDir != Vector2Int.zero)
         {
@@ -68,25 +87,22 @@ public class PlayerMover : MonoBehaviour
             holdTimer = 0f;
             didFirstHoldStep = false;
 
-            TryStep(heldDir); // 首步立即触发
+            TryStep(heldDir);
             return;
         }
 
         if (!holdToMove)
             return;
 
-        // 再读取“按住方向�?
         Vector2Int holdDirNow = ReadHoldDir();
         if (holdDirNow == Vector2Int.zero)
         {
-            // 松开：清空状�?
             heldDir = Vector2Int.zero;
             holdTimer = 0f;
             didFirstHoldStep = false;
             return;
         }
 
-        // 方向改变：立刻按新方向走一�?
         if (holdDirNow != heldDir)
         {
             heldDir = holdDirNow;
@@ -97,10 +113,8 @@ public class PlayerMover : MonoBehaviour
             return;
         }
 
-        // 按住同方向：计时重复
         holdTimer += Time.deltaTime;
 
-        // 第一次重复：repeatDelay；之后每 repeatInterval
         float threshold = didFirstHoldStep ? repeatInterval : repeatDelay;
         if (holdTimer >= threshold)
         {
@@ -113,7 +127,6 @@ public class PlayerMover : MonoBehaviour
 
     private IEnumerator StepTo(int nx, int ny)
     {
-        moving = true;
 
         Vector3 from = transform.position;
         Vector3 tpos = grid.GridToWorld(nx, ny);
@@ -129,30 +142,29 @@ public class PlayerMover : MonoBehaviour
 
         x = nx;
         y = ny;
-
-        moving = false;
     }
 
     private void TryStep(Vector2Int d)
     {
         if (d == Vector2Int.zero) return;
 
-        // Ignore input while a step is resolving to avoid facing drift.
-        if (StepManager.I.stepping) return;
+        // Keep only the latest intent while stepping. Avoid queued zig-zag paths.
+        if (StepManager.I.stepping)
+        {
+            bufferedDir = d;
+            return;
+        }
 
-        // Keep existing behavior: valid attempt updates facing immediately.
         FaceGridDir(d);
 
         int nx = x + d.x;
         int ny = y + d.y;
 
-        // 撞墙/不可走：不移动，但朝向已更新
         if (!grid.IsWalkable(nx, ny)) return;
 
         var occ = OccupancyMap.I;
         if (occ != null)
         {
-            // 重建占格（保持你原逻辑�?
             occ.Clear();
             occ.Set(x, y, this);
 
@@ -170,11 +182,9 @@ public class PlayerMover : MonoBehaviour
 
             var blocker = occ.Get(nx, ny);
 
-            // 目标格是 Auto / Replicator：不能进
             if (blocker is AutoMover) return;
             if (blocker is ReplicatorNode) return;
 
-            // 推箱�?
             if (blocker is BoxMover box)
             {
                 int bx2 = box.x + d.x;
@@ -186,9 +196,6 @@ public class PlayerMover : MonoBehaviour
                 StepManager.I.RequestStep(() => PushBoxAndStep(box, bx2, by2, nx, ny));
                 return;
             }
-
-            // 如果你希望“有其它占格就不能走”，就保留这�?
-            // if (blocker != null) return;
         }
 
         StepManager.I.RequestStep(() => StepTo(nx, ny));
@@ -196,7 +203,6 @@ public class PlayerMover : MonoBehaviour
 
     private IEnumerator PushBoxAndStep(BoxMover box, int bx2, int by2, int px2, int py2)
     {
-        // 同步开两个协程：箱子和玩家同时移动
         bool boxDone = false;
         bool playerDone = false;
 
@@ -230,16 +236,14 @@ public class PlayerMover : MonoBehaviour
 
     private static Vector2Int WorldDirToGridDir(Vector3 forward)
     {
-        // Choose dominant axis to keep 4-dir movement.
         if (Mathf.Abs(forward.x) >= Mathf.Abs(forward.z))
             return forward.x >= 0 ? Vector2Int.right : Vector2Int.left;
-        else
-            return forward.z >= 0 ? Vector2Int.up : Vector2Int.down;
+
+        return forward.z >= 0 ? Vector2Int.up : Vector2Int.down;
     }
 
     private static Vector2Int ReadDownDir()
     {
-        // “按下”优先：首步立即响应
         if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) return Vector2Int.up;
         if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) return Vector2Int.down;
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) return Vector2Int.left;
@@ -249,7 +253,6 @@ public class PlayerMover : MonoBehaviour
 
     private static Vector2Int ReadHoldDir()
     {
-        // 同时按多个方向时，简单按“优先级”取一�?
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) return Vector2Int.up;
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) return Vector2Int.down;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) return Vector2Int.left;
@@ -257,7 +260,4 @@ public class PlayerMover : MonoBehaviour
         return Vector2Int.zero;
     }
 }
-
-
-
 

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class LevelResetter : MonoBehaviour
@@ -22,7 +22,7 @@ public class LevelResetter : MonoBehaviour
 
     public void ResetLevel()
     {
-        // 防止 Time.timeScale 被暂停导致重载异常
+        // Reset Time.timeScale in case pause state would break scene reload.
         Time.timeScale = 1f;
 
         var scene = SceneManager.GetActiveScene();

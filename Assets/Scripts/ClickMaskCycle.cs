@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ClickMaskCycle : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class ClickMaskCycle : MonoBehaviour
     public ReplicatorNode replicatorPrefab;
 
     [Header("Raycast")]
-    public LayerMask maskLayer;     // 只射 mask 物体的层（建议新建一层叫 Mask）
+    public LayerMask maskLayer;     // Layer that includes only mask objects (recommended: a dedicated Mask layer).
     public float rayMax = 200f;
 
     private void Awake()
@@ -27,10 +27,10 @@ public class ClickMaskCycle : MonoBehaviour
         if (!Input.GetMouseButtonDown(0)) return;
         if (cam == null || grid == null) return;
 
-        // 1) 优先点到“物体”
+        // 1) Prefer clicking an object first.
         if (TryPickMaskByCollider(out int gx, out int gy))
         {
-            // 玩家不是 mask：玩家格子不响应
+            // Player is not a mask target: ignore player cell.
             var player = FindObjectOfType<PlayerMover>();
             if (player != null && player.gameObject.activeSelf && player.x == gx && player.y == gy)
                 return;
@@ -39,15 +39,15 @@ public class ClickMaskCycle : MonoBehaviour
             return;
         }
 
-        // 2) 点不到物体再点地板（可选：你也可以直接 return，不允许点空地）
+        // 2) If no object is hit, fallback to floor click (optional behavior).
         if (TryPickGridByPlane(out int px, out int py))
         {
             var player = FindObjectOfType<PlayerMover>();
             if (player != null && player.gameObject.activeSelf && player.x == px && player.y == py)
                 return;
 
-            // 如果你不想点空地也触发，这里先检查该格是否存在 mask
-            // 没 mask 就 return
+            // If empty-floor clicks should not trigger, check whether this cell has a mask first.
+            // No mask on this cell: return early.
             if (!HasAnyMaskAt(px, py)) return;
 
             MaskMorph.CycleAt(grid, px, py, autoPrefab, boxPrefab, conveyorPrefab, replicatorPrefab);
@@ -62,7 +62,7 @@ public class ClickMaskCycle : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit, rayMax, maskLayer))
             return false;
 
-        // 命中哪个类型，就直接取它的 x,y（绝对准确）
+        // Read x/y directly from the hit object type for exact coordinates.
         var b = hit.collider.GetComponentInParent<BoxMover>();
         if (b != null) { gx = b.x; gy = b.y; return true; }
 

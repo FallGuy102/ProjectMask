@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class OccupancyMap : MonoBehaviour
@@ -20,7 +20,7 @@ public class OccupancyMap : MonoBehaviour
 
     public bool IsOccupied(int x, int y) => Get(x, y) != null;
 
-    // ✅ 新增：每步开始/每次玩家尝试移动前都可以调用
+    // New helper: call at step start and before each player movement attempt.
     public void Rebuild(PlayerMover player, IEnumerable<AutoMover> autos)
     {
         Clear();

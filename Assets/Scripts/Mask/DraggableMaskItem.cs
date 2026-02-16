@@ -1,4 +1,4 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -7,8 +7,8 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
     public MaskTypeSimple maskType;
 
     [Header("Drag Settings")]
-    public Canvas rootCanvas;           // 拖 UI 时要用的 Canvas（建议拖进来）
-    public Camera worldCamera;          // 用于射线投射到 Auto（默认 MainCamera）
+    public Canvas rootCanvas;           // Canvas used for dragging UI item (recommended to assign in inspector).
+    public Camera worldCamera;          // Camera used for world raycast to Auto target (default: MainCamera).
     public float worldRayMaxDistance = 200f;
 
     [Header("Visual")]
@@ -43,7 +43,7 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
         _originPos = _rt.position;
 
-        // 拖拽过程中让 UI raycast 穿透（否则 EndDrag 时可能挡住射线）
+        // Allow UI raycast passthrough while dragging (avoid blocking world raycast on drop).
         _cg.blocksRaycasts = false;
     }
 
@@ -54,12 +54,12 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
 
         if (rootCanvas == null)
         {
-            // fallback：直接用屏幕坐标
+            // Fallback: use screen coordinates directly.
             _rt.position = eventData.position;
             return;
         }
 
-        // 让 UI 跟随鼠标（考虑 Canvas scale）
+        // Keep UI element following cursor (respecting Canvas scale).
         _rt.position = eventData.position;
     }
 
@@ -67,7 +67,7 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
     {
         if (!_interactable) return;
 
-        // 恢复 raycast
+        // Restore raycast behavior.
         _cg.blocksRaycasts = true;
 
         if (GameStartController.I != null && GameStartController.I.started)
@@ -76,7 +76,7 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
             return;
         }
 
-        // 用鼠标位置向世界投射，找 AutoMaskReceiver
+        // Raycast from cursor position into world to find AutoMaskReceiver.
         if (worldCamera == null) worldCamera = Camera.main;
 
         bool equipped = false;
@@ -95,7 +95,7 @@ public class DraggableMaskItem : MonoBehaviour, IBeginDragHandler, IDragHandler,
         if (returnToOriginOnDrop)
             _rt.position = _originPos;
 
-        // 可选：装备后立刻刷新 lethal/颜色
+        // Optional: refresh lethal/visual state immediately after equip.
         if (equipped && StepMoveSystem.I != null)
             StepMoveSystem.I.ForceRebuildDynamicLethalFull();
     }

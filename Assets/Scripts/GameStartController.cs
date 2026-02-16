@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class GameStartController : MonoBehaviour
@@ -6,11 +6,11 @@ public class GameStartController : MonoBehaviour
     public static GameStartController I { get; private set; }
 
     [Header("UI")]
-    public GameObject maskUIPanel;            // 整个 UI 面板（开始后隐藏�?
-    public DraggableMaskItem[] draggableItems; // UI 中两个可拖拽 Mask
+    public GameObject maskUIPanel;              // Start before gameplay, hide after start.
+    public DraggableMaskItem[] draggableItems;  // Mask items in UI.
 
     [Header("Gameplay")]
-    public PlayerMover player;               // 拖进来（或自�?Find�?
+    public PlayerMover player;                  // Assign in inspector or auto-find.
     public KeyCode startKey = KeyCode.Space;
 
     [Header("State (ReadOnly)")]
@@ -25,14 +25,14 @@ public class GameStartController : MonoBehaviour
     {
         if (player == null) player = FindObjectOfType<PlayerMover>(includeInactive: true);
 
-        // 开局：锁玩家、开 UI、允许拖�?
+        // Initial state: lock player, show UI, allow drag.
         SetPlayerEnabled(false);
         SetMaskUI(true);
         SetDraggable(true);
 
         started = false;
 
-        // Build initial dynamic lethal preview before the first start input.
+        // Show Auto lethal preview before the first Space input.
         StartCoroutine(RebuildInitialLethalNextFrame());
     }
 
@@ -46,7 +46,7 @@ public class GameStartController : MonoBehaviour
             return;
         }
 
-        // If UI is shown again during runtime, Space hides it immediately.
+        // Space after start can be used to force-hide mask UI.
         SetMaskUI(false);
         SetDraggable(false);
     }
@@ -55,22 +55,19 @@ public class GameStartController : MonoBehaviour
     {
         started = true;
 
-        // �?UI，禁拖拽
+        // Hide UI and disable drag.
         SetMaskUI(false);
         SetDraggable(false);
 
-        // �?关键：把“当前配置（戴好�?mask）”作�?Undo 的初始基�?
+        // Use current equipped mask setup as Undo baseline.
         var undo = FindObjectOfType<StepUndoSystem>();
         if (undo != null)
-        {
-            // 等一帧，确保所�?Equip/SetStateAndDir/SetDirImmediate 等都落地
             StartCoroutine(ResetUndoBaselineNextFrame(undo));
-        }
 
-        // 放开玩家
+        // Enable player control.
         SetPlayerEnabled(true);
 
-        // 可选：开始那一刻刷�?lethal
+        // Refresh lethal once at game start.
         if (StepMoveSystem.I != null)
             StepMoveSystem.I.ForceRebuildDynamicLethalFull();
     }
@@ -83,12 +80,12 @@ public class GameStartController : MonoBehaviour
 
     private IEnumerator RebuildInitialLethalNextFrame()
     {
-        // Wait for AutoMover Start() initialization, then paint lethal preview.
+        // Wait one frame so AutoMover.Start() has finished.
         yield return null;
+
         if (!started && StepMoveSystem.I != null)
             StepMoveSystem.I.ForceRebuildDynamicLethalFull();
     }
-
 
     private void SetMaskUI(bool on)
     {
@@ -99,6 +96,7 @@ public class GameStartController : MonoBehaviour
     private void SetDraggable(bool on)
     {
         if (draggableItems == null) return;
+
         foreach (var d in draggableItems)
             if (d != null) d.SetInteractable(on);
     }
@@ -107,9 +105,5 @@ public class GameStartController : MonoBehaviour
     {
         if (player == null) return;
         player.enabled = on;
-
-        // 如果�?PlayerMover 还有别的输入脚本，也可以在这里一起关
-        // e.g. player.GetComponent<PlayerInput>()?.enabled = on;
     }
 }
-
