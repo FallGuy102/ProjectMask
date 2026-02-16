@@ -13,7 +13,7 @@ public class ClickMaskCycle : MonoBehaviour
     public ReplicatorNode replicatorPrefab;
 
     [Header("Raycast")]
-    public LayerMask maskLayer;     // Ö»Éä mask ÎïÌåµÄ²ã£¨½¨ÒéĞÂ½¨Ò»²ã½Ğ Mask£©
+    public LayerMask maskLayer;     // åªå°„ mask ç‰©ä½“çš„å±‚ï¼ˆå»ºè®®æ–°å»ºä¸€å±‚å« Maskï¼‰
     public float rayMax = 200f;
 
     private void Awake()
@@ -27,10 +27,10 @@ public class ClickMaskCycle : MonoBehaviour
         if (!Input.GetMouseButtonDown(0)) return;
         if (cam == null || grid == null) return;
 
-        // 1) ÓÅÏÈµãµ½¡°ÎïÌå¡±
+        // 1) ä¼˜å…ˆç‚¹åˆ°â€œç‰©ä½“â€
         if (TryPickMaskByCollider(out int gx, out int gy))
         {
-            // Íæ¼Ò²»ÊÇ mask£ºÍæ¼Ò¸ñ×Ó²»ÏìÓ¦
+            // ç©å®¶ä¸æ˜¯ maskï¼šç©å®¶æ ¼å­ä¸å“åº”
             var player = FindObjectOfType<PlayerMover>();
             if (player != null && player.gameObject.activeSelf && player.x == gx && player.y == gy)
                 return;
@@ -39,15 +39,15 @@ public class ClickMaskCycle : MonoBehaviour
             return;
         }
 
-        // 2) µã²»µ½ÎïÌåÔÙµãµØ°å£¨¿ÉÑ¡£ºÄãÒ²¿ÉÒÔÖ±½Ó return£¬²»ÔÊĞíµã¿ÕµØ£©
+        // 2) ç‚¹ä¸åˆ°ç‰©ä½“å†ç‚¹åœ°æ¿ï¼ˆå¯é€‰ï¼šä½ ä¹Ÿå¯ä»¥ç›´æ¥ returnï¼Œä¸å…è®¸ç‚¹ç©ºåœ°ï¼‰
         if (TryPickGridByPlane(out int px, out int py))
         {
             var player = FindObjectOfType<PlayerMover>();
             if (player != null && player.gameObject.activeSelf && player.x == px && player.y == py)
                 return;
 
-            // Èç¹ûÄã²»Ïëµã¿ÕµØÒ²´¥·¢£¬ÕâÀïÏÈ¼ì²é¸Ã¸ñÊÇ·ñ´æÔÚ mask
-            // Ã» mask ¾Í return
+            // å¦‚æœä½ ä¸æƒ³ç‚¹ç©ºåœ°ä¹Ÿè§¦å‘ï¼Œè¿™é‡Œå…ˆæ£€æŸ¥è¯¥æ ¼æ˜¯å¦å­˜åœ¨ mask
+            // æ²¡ mask å°± return
             if (!HasAnyMaskAt(px, py)) return;
 
             MaskMorph.CycleAt(grid, px, py, autoPrefab, boxPrefab, conveyorPrefab, replicatorPrefab);
@@ -62,7 +62,7 @@ public class ClickMaskCycle : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit, rayMax, maskLayer))
             return false;
 
-        // ÃüÖĞÄÄ¸öÀàĞÍ£¬¾ÍÖ±½ÓÈ¡ËüµÄ x,y£¨¾ø¶Ô×¼È·£©
+        // å‘½ä¸­å“ªä¸ªç±»å‹ï¼Œå°±ç›´æ¥å–å®ƒçš„ x,yï¼ˆç»å¯¹å‡†ç¡®ï¼‰
         var b = hit.collider.GetComponentInParent<BoxMover>();
         if (b != null) { gx = b.x; gy = b.y; return true; }
 

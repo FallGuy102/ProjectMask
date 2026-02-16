@@ -22,7 +22,7 @@ public class LevelResetter : MonoBehaviour
 
     public void ResetLevel()
     {
-        // ·ÀÖ¹ Time.timeScale ±»ÔİÍ£µ¼ÖÂÖØÔØÒì³£
+        // é˜²æ­¢ Time.timeScale è¢«æš‚åœå¯¼è‡´é‡è½½å¼‚å¸¸
         Time.timeScale = 1f;
 
         var scene = SceneManager.GetActiveScene();

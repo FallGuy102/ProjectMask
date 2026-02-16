@@ -9,8 +9,8 @@ public class ReplicatorNode : MonoBehaviour
     public int y;
 
     [Header("Ports (must be perpendicular)")]
-    public Vector2Int entryDir = Vector2Int.down;  // Èë¿ÚÏà¶Ô¸´ÖÆÆ÷µÄ·½Ïò£¨Àı£ºÏÂ£©
-    public Vector2Int exitDir = Vector2Int.right; // ³ö¿ÚÏà¶Ô¸´ÖÆÆ÷µÄ·½Ïò£¨Àı£ºÓÒ£©
+    public Vector2Int entryDir = Vector2Int.down;  // å…¥å£ç›¸å¯¹å¤åˆ¶å™¨çš„æ–¹å‘ï¼ˆä¾‹ï¼šä¸‹ï¼‰
+    public Vector2Int exitDir = Vector2Int.right; // å‡ºå£ç›¸å¯¹å¤åˆ¶å™¨çš„æ–¹å‘ï¼ˆä¾‹ï¼šå³ï¼‰
 
     private void Start()
     {
@@ -31,20 +31,20 @@ public class ReplicatorNode : MonoBehaviour
     public Vector2Int ExitCell => new Vector2Int(x + exitDir.x, y + exitDir.y);
 
     /// <summary>
-    /// ¼ÆËã°Ñ¡°Èë¿Ú·½Ïò¡±Ğıµ½¡°³ö¿Ú·½Ïò¡±µÄ 90¡ãĞı×ª£¨Ö»Ö§³Ö´¹Ö±£©¡£
-    /// ·µ»Ø£º+1 = CCW(ÄæÊ±Õë90)£¬-1 = CW(Ë³Ê±Õë90)£¬0 = ²»Ö§³Ö/²»´¹Ö±
+    /// è®¡ç®—æŠŠâ€œå…¥å£æ–¹å‘â€æ—‹åˆ°â€œå‡ºå£æ–¹å‘â€çš„ 90Â°æ—‹è½¬ï¼ˆåªæ”¯æŒå‚ç›´ï¼‰ã€‚
+    /// è¿”å›ï¼š+1 = CCW(é€†æ—¶é’ˆ90)ï¼Œ-1 = CW(é¡ºæ—¶é’ˆ90)ï¼Œ0 = ä¸æ”¯æŒ/ä¸å‚ç›´
     /// </summary>
     public int Rot90Sign()
     {
-        // ±ØĞë´¹Ö±£¨µã»ıÎª 0£©
+        // å¿…é¡»å‚ç›´ï¼ˆç‚¹ç§¯ä¸º 0ï¼‰
         if (entryDir.x * exitDir.x + entryDir.y * exitDir.y != 0)
             return 0;
 
-        // 2D ²æ»ı£¨z ·ÖÁ¿£©
+        // 2D å‰ç§¯ï¼ˆz åˆ†é‡ï¼‰
         int cross = entryDir.x * exitDir.y - entryDir.y * exitDir.x;
 
-        if (cross > 0) return +1; // ÄæÊ±Õë CCW
-        if (cross < 0) return -1; // Ë³Ê±Õë CW
+        if (cross > 0) return +1; // é€†æ—¶é’ˆ CCW
+        if (cross < 0) return -1; // é¡ºæ—¶é’ˆ CW
         return 0;
     }
 
@@ -55,14 +55,14 @@ public class ReplicatorNode : MonoBehaviour
         transform.position = new Vector3(w.x, transform.position.y, w.z);
     }
 
-    // ¸´ÖÆÆ÷µÄ¡°·½Ïò¡±¶¨ÒåÎª exitDir
+    // å¤åˆ¶å™¨çš„â€œæ–¹å‘â€å®šä¹‰ä¸º exitDir
     public Vector2Int GetDir() => exitDir;
 
     public void SetDir(Vector2Int exit)
     {
         if (exit == Vector2Int.zero) return;
 
-        // ÓÃ exitDir ±íÊ¾·½Ïò£¬entryDir ¹Ì¶¨Îª exitDir Ë³Ê±Õë 90¡ã
+        // ç”¨ exitDir è¡¨ç¤ºæ–¹å‘ï¼ŒentryDir å›ºå®šä¸º exitDir é¡ºæ—¶é’ˆ 90Â°
         exitDir = exit;
         entryDir = new Vector2Int(exit.y, -exit.x); // CW 90: (x,y)->(y,-x)
     }
@@ -71,7 +71,7 @@ public class ReplicatorNode : MonoBehaviour
     {
         if (entry == Vector2Int.zero || exit == Vector2Int.zero) return;
 
-        // ±ØĞë´¹Ö±
+        // å¿…é¡»å‚ç›´
         if (entry.x * exit.x + entry.y * exit.y != 0)
         {
             Debug.LogWarning($"Replicator ports must be perpendicular: entry={entry}, exit={exit}");

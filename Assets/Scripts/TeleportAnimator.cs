@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TeleportAnimator : MonoBehaviour
 {
-    [Tooltip("´«ËÍ¶¯»­Ê±³¤£¨Ãë£©£¬½¨Òé 0.06~0.12")]
+    [Tooltip("ä¼ é€åŠ¨ç”»æ—¶é•¿ï¼ˆç§’ï¼‰ï¼Œå»ºè®® 0.06~0.12")]
     public float duration = 0.08f;
 
     private Coroutine co;
@@ -10,11 +10,11 @@ public class TeleportAnimator : MonoBehaviour
     private bool hasForcedFinal = false;
 
     /// <summary>
-    /// ¿ªÊ¼Ò»´Î¿ìËÙ´«ËÍ¶¯»­¡£ÈôÒÑÓĞ¶¯»­ÔÚ²¥£¬»áÏÈ°ÑÉÏÒ»¶ÎÖ±½Ó½áËãµ½ÖÕµã¡£
+    /// å¼€å§‹ä¸€æ¬¡å¿«é€Ÿä¼ é€åŠ¨ç”»ã€‚è‹¥å·²æœ‰åŠ¨ç”»åœ¨æ’­ï¼Œä¼šå…ˆæŠŠä¸Šä¸€æ®µç›´æ¥ç»“ç®—åˆ°ç»ˆç‚¹ã€‚
     /// </summary>
     public void PlayTo(Vector3 targetPos, float customDuration = -1f)
     {
-        // Èç¹ûÕıÔÚ²¥ÉÏÒ»¶Î£ºÖ±½ÓÂäµ½ÉÏÒ»¶ÎÖÕµã
+        // å¦‚æœæ­£åœ¨æ’­ä¸Šä¸€æ®µï¼šç›´æ¥è½åˆ°ä¸Šä¸€æ®µç»ˆç‚¹
         ForceFinish();
 
         float d = customDuration > 0 ? customDuration : duration;
@@ -26,7 +26,7 @@ public class TeleportAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// Ç¿ÖÆ½áÊø£ºÁ¢¿Ìµ½ÖÕµã£¨ÓÃÓÚ step ºÜ¿ì¡¢»òÏÂÒ»´Î´«ËÍµ½À´£©
+    /// å¼ºåˆ¶ç»“æŸï¼šç«‹åˆ»åˆ°ç»ˆç‚¹ï¼ˆç”¨äº step å¾ˆå¿«ã€æˆ–ä¸‹ä¸€æ¬¡ä¼ é€åˆ°æ¥ï¼‰
     /// </summary>
     public void ForceFinish()
     {

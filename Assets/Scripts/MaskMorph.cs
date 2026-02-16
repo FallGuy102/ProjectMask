@@ -11,11 +11,11 @@ public enum MaskType
 public static class MaskMorph
 {
     /// <summary>
-    /// °ÑÄ¿±ê¸ñ×ÓÉÏµÄ¡°maskÎïÌå¡±ÇĞ»»³ÉÖ¸¶¨ÀàĞÍ¡£
-    /// - Ö§³Ö Box / Auto / Conveyor / Replicator ËÄÖÖ»¥×ª
-    /// - dirOverride£º¸ø Auto/Conveyor µÄ·½Ïò¸²Ğ´£¨BoxºöÂÔ£©
-    /// - Replicator ÍÆ¼öÊ¹ÓÃ repEntryOverride + repExitOverride£¨À´×Ô»­ÏßÁ½¶Î£©
-    /// - Î´Ìá¹© dirOverride Ê±£º¾¡Á¿¼Ì³Ğ¾ÉÎïÌå·½Ïò£»Èç¹û¾ÉÎïÌåÎŞ·½Ïò£¨Box£©£¬ÓÃ Vector2Int.right
+    /// æŠŠç›®æ ‡æ ¼å­ä¸Šçš„â€œmaskç‰©ä½“â€åˆ‡æ¢æˆæŒ‡å®šç±»å‹ã€‚
+    /// - æ”¯æŒ Box / Auto / Conveyor / Replicator å››ç§äº’è½¬
+    /// - dirOverrideï¼šç»™ Auto/Conveyor çš„æ–¹å‘è¦†å†™ï¼ˆBoxå¿½ç•¥ï¼‰
+    /// - Replicator æ¨èä½¿ç”¨ repEntryOverride + repExitOverrideï¼ˆæ¥è‡ªç”»çº¿ä¸¤æ®µï¼‰
+    /// - æœªæä¾› dirOverride æ—¶ï¼šå°½é‡ç»§æ‰¿æ—§ç‰©ä½“æ–¹å‘ï¼›å¦‚æœæ—§ç‰©ä½“æ— æ–¹å‘ï¼ˆBoxï¼‰ï¼Œç”¨ Vector2Int.right
     /// </summary>
     public static void MorphAt(
         GridManager2D grid,
@@ -32,21 +32,21 @@ public static class MaskMorph
     {
         if (grid == null) { Debug.LogError("MorphAt: grid is null"); return; }
 
-        // ÕÒµ½´Ë¸ñ×ÓµÄÏÖÓĞ¶ÔÏó£¨ËÄÖÖmask£©
+        // æ‰¾åˆ°æ­¤æ ¼å­çš„ç°æœ‰å¯¹è±¡ï¼ˆå››ç§maskï¼‰
         var oldBox = FindAt<BoxMover>(x, y);
         var oldAuto = FindAt<AutoMover>(x, y);
         var oldConv = FindAt<ConveyorBelt>(x, y);
         var oldRep = FindAt<ReplicatorNode>(x, y);
 
-        // Ã»ÓĞmask¾Í²»´¦Àí
+        // æ²¡æœ‰maskå°±ä¸å¤„ç†
         if (oldBox == null && oldAuto == null && oldConv == null && oldRep == null)
             return;
 
-        // ¼Ì³Ğ·½Ïò£ºÓÅÏÈÓÃ dirOverride£»·ñÔò´Ó¾ÉÎïÌå¶ÁÈ¡£»Box ÎŞ·½Ïò¾ÍÓÃÄ¬ÈÏ
+        // ç»§æ‰¿æ–¹å‘ï¼šä¼˜å…ˆç”¨ dirOverrideï¼›å¦åˆ™ä»æ—§ç‰©ä½“è¯»å–ï¼›Box æ— æ–¹å‘å°±ç”¨é»˜è®¤
         Vector2Int inheritedDir = dirOverride ?? GetDirFromOld(oldAuto, oldConv, oldRep, Vector2Int.right);
         inheritedDir = SafeDir(inheritedDir);
 
-        // Èç¹ûÄ¿±êÀàĞÍºÍµ±Ç°ÀàĞÍÒ»ÖÂ£ºÖ»×ö¡°·½Ïò¸üĞÂ + ¶ÔÆë¡±
+        // å¦‚æœç›®æ ‡ç±»å‹å’Œå½“å‰ç±»å‹ä¸€è‡´ï¼šåªåšâ€œæ–¹å‘æ›´æ–° + å¯¹é½â€
         var curType = GetCurrentType(oldBox, oldAuto, oldConv, oldRep);
         if (curType == toType)
         {
@@ -55,13 +55,13 @@ public static class MaskMorph
             return;
         }
 
-        // Ïú»Ù¾ÉÎïÌå£¨mask Ö®¼ä»¥×ª£©
+        // é”€æ¯æ—§ç‰©ä½“ï¼ˆmask ä¹‹é—´äº’è½¬ï¼‰
         if (oldBox) Object.Destroy(oldBox.gameObject);
         if (oldAuto) Object.Destroy(oldAuto.gameObject);
         if (oldConv) Object.Destroy(oldConv.gameObject);
         if (oldRep) Object.Destroy(oldRep.gameObject);
 
-        // Éú³ÉĞÂÎïÌå
+        // ç”Ÿæˆæ–°ç‰©ä½“
         switch (toType)
         {
             case MaskType.Box:
@@ -92,8 +92,8 @@ public static class MaskMorph
     }
 
     /// <summary>
-    /// ÂÖÁ÷ÇĞ»»£ºBox -> Conveyor -> Replicator -> Auto -> Box
-    /// ·½Ïò»á¼Ì³Ğ£¨BoxÎŞ·½ÏòÔòÓÃÄ¬ÈÏ Vector2Int.right£©¡£
+    /// è½®æµåˆ‡æ¢ï¼šBox -> Conveyor -> Replicator -> Auto -> Box
+    /// æ–¹å‘ä¼šç»§æ‰¿ï¼ˆBoxæ— æ–¹å‘åˆ™ç”¨é»˜è®¤ Vector2Int.rightï¼‰ã€‚
     /// </summary>
     public static void CycleAt(
         GridManager2D grid,
@@ -115,12 +115,12 @@ public static class MaskMorph
         var cur = GetCurrentType(oldBox, oldAuto, oldConv, oldRep);
         var next = NextType(cur);
 
-        // ¼Ì³Ğ·½Ïò
+        // ç»§æ‰¿æ–¹å‘
         Vector2Int dir = GetDirFromOld(oldAuto, oldConv, oldRep, Vector2Int.right);
 
         MorphAt(grid, x, y, next,
             dirOverride: dir,
-            // Cycle ²»ÖªµÀ entry/exit£¬ËùÒÔ²»´« override -> ÓÃ¾É¹æÔò
+            // Cycle ä¸çŸ¥é“ entry/exitï¼Œæ‰€ä»¥ä¸ä¼  override -> ç”¨æ—§è§„åˆ™
             repEntryOverride: null,
             repExitOverride: null,
             autoPrefab: autoPrefab,
@@ -137,7 +137,7 @@ public static class MaskMorph
         {
             if (!t || !t.gameObject.activeSelf) continue;
 
-            // ÕâĞ©Àà¶¼ÓĞ x/y ×Ö¶Î
+            // è¿™äº›ç±»éƒ½æœ‰ x/y å­—æ®µ
             if (t is BoxMover b && b.x == x && b.y == y) return t;
             if (t is AutoMover a && a.x == x && a.y == y) return t;
             if (t is ConveyorBelt c && c.x == x && c.y == y) return t;
@@ -170,7 +170,7 @@ public static class MaskMorph
     {
         if (a != null) return SafeDir(a.dir);
         if (c != null) return SafeDir(c.dir);
-        // ¸´ÖÆÆ÷·½ÏòÎÒÃÇ¶¨ÒåÎª exitDir£¨entryDir »áÓÉ¹æÔò/override ¾ö¶¨£©
+        // å¤åˆ¶å™¨æ–¹å‘æˆ‘ä»¬å®šä¹‰ä¸º exitDirï¼ˆentryDir ä¼šç”±è§„åˆ™/override å†³å®šï¼‰
         if (r != null) return SafeDir(r.exitDir);
         return SafeDir(fallback);
     }
@@ -201,13 +201,13 @@ public static class MaskMorph
 
         if (t == MaskType.Replicator && r != null)
         {
-            // Èç¹û»­ÏßÏµÍ³¸øÁË entry/exit£¬ÔòÑÏ¸ñ²ÉÓÃ
+            // å¦‚æœç”»çº¿ç³»ç»Ÿç»™äº† entry/exitï¼Œåˆ™ä¸¥æ ¼é‡‡ç”¨
             if (repEntryOverride.HasValue && repExitOverride.HasValue)
             {
                 Vector2Int entry = SafeDir(repEntryOverride.Value);
                 Vector2Int exit = SafeDir(repExitOverride.Value);
 
-                // ±ØĞë´¹Ö±£¬·ñÔò»ØÍËµ½¾ÉÂß¼­
+                // å¿…é¡»å‚ç›´ï¼Œå¦åˆ™å›é€€åˆ°æ—§é€»è¾‘
                 if (entry.x * exit.x + entry.y * exit.y == 0)
                 {
                     r.entryDir = entry;
@@ -217,7 +217,7 @@ public static class MaskMorph
                 Debug.LogWarning($"ApplyDirIfNeeded: invalid replicator ports entry={entry} exit={exit}, fallback to legacy.");
             }
 
-            // ¾ÉÂß¼­£º¸´ÖÆÆ÷·½Ïò¶¨ÒåÎª exitDir£¬entryDir = CW90(exitDir)
+            // æ—§é€»è¾‘ï¼šå¤åˆ¶å™¨æ–¹å‘å®šä¹‰ä¸º exitDirï¼ŒentryDir = CW90(exitDir)
             r.exitDir = inheritedDir;
             r.entryDir = new Vector2Int(inheritedDir.y, -inheritedDir.x); // CW 90
         }
@@ -245,11 +245,11 @@ public static class MaskMorph
     {
         if (d == Vector2Int.zero) return Vector2Int.right;
 
-        // Ö»ÔÊĞíËÄ·½Ïò
+        // åªå…è®¸å››æ–¹å‘
         if (d == Vector2Int.right || d == Vector2Int.left || d == Vector2Int.up || d == Vector2Int.down)
             return d;
 
-        // ¶µµ×£º¹éÒ»µ½Ö÷Öá
+        // å…œåº•ï¼šå½’ä¸€åˆ°ä¸»è½´
         if (Mathf.Abs(d.x) >= Mathf.Abs(d.y))
             return d.x >= 0 ? Vector2Int.right : Vector2Int.left;
         else
@@ -296,15 +296,15 @@ public static class MaskMorph
         c.x = x; c.y = y;
         c.dir = dir;
 
-        // ¶ÔÆëµ½¸ñ×Ó
+        // å¯¹é½åˆ°æ ¼å­
         Vector3 ww = grid.GridToWorld(x, y);
         c.transform.position = new Vector3(ww.x, c.transform.position.y, ww.z);
     }
 
     /// <summary>
-    /// Éú³É¸´ÖÆÆ÷£ºÄ¬ÈÏ¾É¹æÔò£¨entry = CW90(exit)£©¡£
-    /// Èç¹û repEntryOverride + repExitOverride ¶¼Ìá¹©£¬ÔòÑÏ¸ñ²ÉÓÃÄã»­ÏßµÄ¶Ë¿Ú¹æÔò£º
-    /// entry = -seg1, exit = seg2£¨ÓÉÍâ²¿´«Èë£©
+    /// ç”Ÿæˆå¤åˆ¶å™¨ï¼šé»˜è®¤æ—§è§„åˆ™ï¼ˆentry = CW90(exit)ï¼‰ã€‚
+    /// å¦‚æœ repEntryOverride + repExitOverride éƒ½æä¾›ï¼Œåˆ™ä¸¥æ ¼é‡‡ç”¨ä½ ç”»çº¿çš„ç«¯å£è§„åˆ™ï¼š
+    /// entry = -seg1, exit = seg2ï¼ˆç”±å¤–éƒ¨ä¼ å…¥ï¼‰
     /// </summary>
     static void SpawnReplicator(
         GridManager2D grid,
@@ -325,7 +325,7 @@ public static class MaskMorph
         r.grid = grid;
         r.x = x; r.y = y;
 
-        // ¾ö¶¨ entry/exit
+        // å†³å®š entry/exit
         Vector2Int exit = exitDirFallback;
         Vector2Int entry = new Vector2Int(exit.y, -exit.x); // legacy default
 
@@ -334,7 +334,7 @@ public static class MaskMorph
             Vector2Int eIn = SafeDir(repEntryOverride.Value);
             Vector2Int eOut = SafeDir(repExitOverride.Value);
 
-            // ±ØĞë´¹Ö±£¬·ñÔò»ØÍË legacy
+            // å¿…é¡»å‚ç›´ï¼Œå¦åˆ™å›é€€ legacy
             if (eIn.x * eOut.x + eIn.y * eOut.y == 0)
             {
                 entry = eIn;
@@ -349,15 +349,15 @@ public static class MaskMorph
         r.entryDir = entry;
         r.exitDir = exit;
 
-        // ¶ÔÆëµ½¸ñ×Ó
+        // å¯¹é½åˆ°æ ¼å­
         Vector3 ww = grid.GridToWorld(x, y);
         r.transform.position = new Vector3(ww.x, r.transform.position.y, ww.z);
     }
 
     /// <summary>
-    /// Ç¿ÖÆÔÚ(x,y)Éú³ÉÒ»¸öÖ¸¶¨ÀàĞÍµÄmask£¨²»ÒªÇóÔ­¸ñ×ÓÉÏÒÑ¾­ÓĞmask£©¡£
-    /// Èç¹û¸Ã¸ñÒÑÓĞmask£¬»áÏÈÏú»ÙÔÙÉú³É¡£
-    /// ÓÃÓÚ Undo/Load/¹Ø¿¨³õÊ¼»¯¡£
+    /// å¼ºåˆ¶åœ¨(x,y)ç”Ÿæˆä¸€ä¸ªæŒ‡å®šç±»å‹çš„maskï¼ˆä¸è¦æ±‚åŸæ ¼å­ä¸Šå·²ç»æœ‰maskï¼‰ã€‚
+    /// å¦‚æœè¯¥æ ¼å·²æœ‰maskï¼Œä¼šå…ˆé”€æ¯å†ç”Ÿæˆã€‚
+    /// ç”¨äº Undo/Load/å…³å¡åˆå§‹åŒ–ã€‚
     /// </summary>
     public static void SpawnAt(
         GridManager2D grid,
@@ -374,7 +374,7 @@ public static class MaskMorph
     {
         if (grid == null) { Debug.LogError("SpawnAt: grid is null"); return; }
 
-        // ÕÒ¾ÉÎïÌå£¨ÓĞ¾ÍÉ¾£©
+        // æ‰¾æ—§ç‰©ä½“ï¼ˆæœ‰å°±åˆ ï¼‰
         var oldBox = FindAt<BoxMover>(x, y);
         var oldAuto = FindAt<AutoMover>(x, y);
         var oldConv = FindAt<ConveyorBelt>(x, y);
@@ -387,7 +387,7 @@ public static class MaskMorph
 
         Vector2Int dir = SafeDir(dirOverride ?? Vector2Int.right);
 
-        // Ö±½ÓÉú³É£¨¸´ÓÃÄãÏÖÓĞµÄ SpawnXXX£©
+        // ç›´æ¥ç”Ÿæˆï¼ˆå¤ç”¨ä½ ç°æœ‰çš„ SpawnXXXï¼‰
         switch (toType)
         {
             case MaskType.Box:

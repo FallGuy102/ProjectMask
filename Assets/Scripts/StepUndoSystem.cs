@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -41,6 +41,7 @@ public class StepUndoSystem : MonoBehaviour
         public int x;
         public int y;
         public Vector2Int dir;
+        public float boxYOffset;
 
         public Vector2Int entryDir;
         public Vector2Int exitDir;
@@ -61,7 +62,7 @@ public class StepUndoSystem : MonoBehaviour
 
     private void OnEnable()
     {
-        // ✅ 场景重载/切换时：确保历史不会跨场景残留
+        // ? ��������/�л�ʱ��ȷ����ʷ����糡������
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -74,7 +75,7 @@ public class StepUndoSystem : MonoBehaviour
     {
         if (grid == null) grid = FindObjectOfType<GridManager2D>();
 
-        // ✅ 初始快照：等初始化完成再抓（两帧更稳）
+        // ? ��ʼ���գ��ȳ�ʼ�������ץ����֡���ȣ�
         StartCoroutine(CaptureInitialAfterInit());
 
         if (StepManager.I != null)
@@ -89,20 +90,20 @@ public class StepUndoSystem : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // ✅ 新场景加载完：清历史 + 重新抓初始
+        // ? �³��������꣺����ʷ + ����ץ��ʼ
         ResetHistoryAndCaptureInitial();
     }
 
     private IEnumerator CaptureInitialAfterInit()
     {
         yield return null;
-        yield return null; // ✅ 多等一帧，避免 PlayerMover/Awake/Start 还没同步完
+        yield return null; // ? ���һ֡������ PlayerMover/Awake/Start ��ûͬ����
         ResetHistoryAndCaptureInitial();
     }
 
     /// <summary>
-    /// ✅ 对外/对内都可用：清空历史，只保留当前关卡的“初始快照”
-    /// 解决 R 重载后 Undo 回到旧快照/或 player.x/y 默认值的问题。
+    /// ? ����/���ڶ����ã������ʷ��ֻ������ǰ�ؿ��ġ���ʼ���ա�
+    /// ��� R ���غ� Undo �ص��ɿ���/�� player.x/y Ĭ��ֵ�����⡣
     /// </summary>
     public void ResetHistoryAndCaptureInitial()
     {
@@ -172,8 +173,8 @@ public class StepUndoSystem : MonoBehaviour
             s.player.footYOffset = p.footYOffset;
             s.player.facingDir = ReadPlayerFacingDir(p);
 
-            // ✅ 关键修复：不要盲信 p.x/p.y（可能还是脚本默认值）
-            // 直接从 transform 位置反推 grid 坐标，确保初始快照正确
+            // ? �ؼ��޸�����Ҫä�� p.x/p.y�����ܻ��ǽű�Ĭ��ֵ��
+            // ֱ�Ӵ� transform λ�÷��� grid ���꣬ȷ����ʼ������ȷ
             Vector2Int gpos = WorldToGridSafe(p.transform.position, grid);
             s.player.x = gpos.x;
             s.player.y = gpos.y;
@@ -206,7 +207,8 @@ public class StepUndoSystem : MonoBehaviour
                 type = MaskType.Box,
                 x = b.x,
                 y = b.y,
-                dir = Vector2Int.right
+                dir = Vector2Int.right,
+                boxYOffset = b.yOffset
             });
         }
 
@@ -245,8 +247,8 @@ public class StepUndoSystem : MonoBehaviour
     {
         if (grid == null) return Vector2Int.zero;
 
-        // 你的项目是 XZ 平面：x 对 world.x，y 对 world.z
-        // 这里用 grid.cellSize 做反算（和你 AutoMover Start 里一致）
+        // �����Ŀ�� XZ ƽ�棺x �� world.x��y �� world.z
+        // ������ grid.cellSize �����㣨���� AutoMover Start ��һ�£�
         int gx = Mathf.RoundToInt(worldPos.x / grid.cellSize);
         int gy = Mathf.RoundToInt(worldPos.z / grid.cellSize);
         return new Vector2Int(gx, gy);
@@ -281,7 +283,7 @@ public class StepUndoSystem : MonoBehaviour
         if (player != null) player.StopAllCoroutines();
 
         if (player != null)
-            player.gameObject.SetActive(true); // Undo 一律复活
+            player.gameObject.SetActive(true); // Undo һ�ɸ���
 
         // clear masks
         foreach (var a in FindObjectsOfType<AutoMover>()) if (a) { a.gameObject.SetActive(false); Destroy(a.gameObject); }
@@ -308,6 +310,7 @@ public class StepUndoSystem : MonoBehaviour
         // rebuild masks
         var autoStateMap = new Dictionary<Vector2Int, AutoState>();
         var autoDirMap = new Dictionary<Vector2Int, Vector2Int>();
+        var boxYOffsetMap = new Dictionary<Vector2Int, float>();
 
         foreach (var m in s.masks)
         {
@@ -315,6 +318,10 @@ public class StepUndoSystem : MonoBehaviour
             {
                 autoStateMap[new Vector2Int(m.x, m.y)] = m.autoState;
                 autoDirMap[new Vector2Int(m.x, m.y)] = m.dir;
+            }
+            else if (m.type == MaskType.Box)
+            {
+                boxYOffsetMap[new Vector2Int(m.x, m.y)] = m.boxYOffset;
             }
 
             Vector2Int? dirOverride = (m.type == MaskType.Box) ? null : m.dir;
@@ -341,6 +348,17 @@ public class StepUndoSystem : MonoBehaviour
 
             if (autoDirMap.TryGetValue(key, out var d))
                 a.SetDirImmediate(d);
+        }
+
+        foreach (var b in FindObjectsOfType<BoxMover>())
+        {
+            if (b == null) continue;
+            var key = new Vector2Int(b.x, b.y);
+            if (boxYOffsetMap.TryGetValue(key, out var yOffset))
+            {
+                b.yOffset = yOffset;
+                b.SnapToGrid();
+            }
         }
 
         RebuildOccupancy();
@@ -447,3 +465,4 @@ public class StepUndoSystem : MonoBehaviour
             f.SetValue(StepManager.I, value);
     }
 }
+

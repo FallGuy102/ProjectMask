@@ -9,7 +9,7 @@ public class StepManager : MonoBehaviour
     public int stepIndex { get; private set; } = 0;
     public bool stepping { get; private set; } = false;
 
-    // ÊÂ¼ş£ºÒÔºó¸ø¸´ÖÆÆ÷/´«ËÍ´ø/»ú¹Ø¶©ÔÄ
+    // äº‹ä»¶ï¼šä»¥åç»™å¤åˆ¶å™¨/ä¼ é€å¸¦/æœºå…³è®¢é˜…
     public event Action<int> OnStepBegin;
     public event Action<int> OnStepAfterMove;
     public event Action<int> OnStepResolve;
@@ -34,18 +34,18 @@ public class StepManager : MonoBehaviour
 
         OnStepBegin?.Invoke(stepIndex);
 
-        // Ö´ĞĞ£ºÒÆ¶¯½×¶Î£¨Íæ¼Ò/×Ô¶¯µ¥Î»ÒÔºó¶¼ÔÚÕâÒ»²½×ö£©
-        // 1) Íæ¼Ò±¾´ÎÊäÈëµ¼ÖÂµÄÒÆ¶¯
+        // æ‰§è¡Œï¼šç§»åŠ¨é˜¶æ®µï¼ˆç©å®¶/è‡ªåŠ¨å•ä½ä»¥åéƒ½åœ¨è¿™ä¸€æ­¥åšï¼‰
+        // 1) ç©å®¶æœ¬æ¬¡è¾“å…¥å¯¼è‡´çš„ç§»åŠ¨
         if (stepRoutineFactory != null)
             yield return stepRoutineFactory.Invoke();
 
-        // 2) ×Ô¶¯µ¥Î»ÒÆ¶¯£¨MOVE»úÆ÷ÈËµÈ£©
+        // 2) è‡ªåŠ¨å•ä½ç§»åŠ¨ï¼ˆMOVEæœºå™¨äººç­‰ï¼‰
         if (StepMoveSystem.I != null)
             yield return StepMoveSystem.I.ExecuteQueuedMoves();
 
         OnStepAfterMove?.Invoke(stepIndex);
 
-        // Ö´ĞĞ£º½áËã½×¶Î£¨¸´ÖÆÆ÷¡¢Ñ¹Á¦°å¡¢ËÀÍöÇøµÈÒÔºó¶¼·ÅÕâÀï£©
+        // æ‰§è¡Œï¼šç»“ç®—é˜¶æ®µï¼ˆå¤åˆ¶å™¨ã€å‹åŠ›æ¿ã€æ­»äº¡åŒºç­‰ä»¥åéƒ½æ”¾è¿™é‡Œï¼‰
         OnStepResolve?.Invoke(stepIndex);
 
         OnStepEnd?.Invoke(stepIndex);

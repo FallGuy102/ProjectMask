@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 public class PlayerMover : MonoBehaviour
@@ -18,10 +18,13 @@ public class PlayerMover : MonoBehaviour
     private bool didFirstHoldStep = false;
 
     public float footYOffset = 0.5f; // 角色脚底离逻辑平面的高度
+
     public bool autoFootFromCollider = true;
 
     [Header("Model Facing")]
     public float modelYawOffset = 0f;
+
+    public Vector2Int facingDir = Vector2Int.up;
 
     private bool moving;
 
@@ -47,6 +50,9 @@ public class PlayerMover : MonoBehaviour
 
         var world = grid.GridToWorld(x, y);
         transform.position = new Vector3(world.x, grid.tileTopY + footYOffset, world.z);
+
+        // Initialize facing from current rotation so Undo can restore correctly.
+        facingDir = WorldDirToGridDir(transform.forward);
     }
 
     private void Update()
@@ -209,6 +215,8 @@ public class PlayerMover : MonoBehaviour
     {
         if (d == Vector2Int.zero) return;
 
+        facingDir = d;
+
         Vector3 worldDir;
         if (d == Vector2Int.right) worldDir = Vector3.right;
         else if (d == Vector2Int.left) worldDir = Vector3.left;
@@ -217,6 +225,15 @@ public class PlayerMover : MonoBehaviour
         else return;
 
         transform.rotation = Quaternion.LookRotation(worldDir, Vector3.up) * Quaternion.Euler(0f, modelYawOffset, 0f);
+    }
+
+    private static Vector2Int WorldDirToGridDir(Vector3 forward)
+    {
+        // Choose dominant axis to keep 4-dir movement.
+        if (Mathf.Abs(forward.x) >= Mathf.Abs(forward.z))
+            return forward.x >= 0 ? Vector2Int.right : Vector2Int.left;
+        else
+            return forward.z >= 0 ? Vector2Int.up : Vector2Int.down;
     }
 
     private static Vector2Int ReadDownDir()
@@ -239,3 +256,5 @@ public class PlayerMover : MonoBehaviour
         return Vector2Int.zero;
     }
 }
+
+
